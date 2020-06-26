@@ -5,7 +5,7 @@
 """
 
 
-def PatternCount(Text, Pattern):
+def PatternCount(Pattern, Text):
     count = 0
 
     for i in range(len(Text)-len(Pattern)+1):
@@ -103,3 +103,128 @@ def PatternMatching(Pattern, Genome):
             positions.append(i)
 
     return positions
+
+
+"""
+    Symbol Array Problem: Find the number of occurrences of a symbol encountered in each window of the genome
+        Input: Symbol and Genome.
+        Output: Symbol array of Genome corresponding to symbol.
+"""
+
+
+def SymbolArray(Genome, symbol):
+    array = {}
+    n = len(Genome)
+    ExtendedGenome = Genome + Genome[0:n//2]
+
+    for i in range(n):
+        array[i] = PatternCount(symbol, ExtendedGenome[i:i+(n//2)])
+
+    return array
+
+
+def FasterSymbolArray(Genome, symbol):
+    array = {}
+    n = len(Genome)
+    ExtendedGenome = Genome + Genome[0:n//2]
+
+    array[0] = PatternCount(symbol, Genome[0:n//2])
+
+    for i in range(1, n):
+        array[i] = array[i-1]
+
+        if ExtendedGenome[i-1] == symbol:
+            array[i] = array[i]-1
+        if ExtendedGenome[i+(n//2)-1] == symbol:
+            array[i] = array[i]+1
+
+    return array
+
+
+"""
+    Skew Array Problem: Find the skew array of genome.
+        Input: String Genome.
+        Output: The skew array of Genome as a list.
+"""
+
+
+def SkewArray(Genome):
+    skew = [0]
+
+    for i in range(len(Genome)):
+        if Genome[i] == 'A' or Genome[i] == 'T':
+            skew.append(skew[i])
+
+        elif Genome[i] == 'G':
+            skew.append(skew[i] + 1)
+
+        elif Genome[i] == 'C':
+            skew.append(skew[i] - 1)
+
+    return skew
+
+
+"""
+    Minimum Skew Problem: Find a position in a genome where the skew diagram attains a minimum.
+        Input: A DNA string Genome.
+        Output: All integer(s) i minimizing Skew[i] among all values of i (from 0 to len(Genome)).
+"""
+
+
+def MinimumSkew(Genome):
+    positions = []
+    count = 0
+
+    skew = SkewArray(Genome)
+    minimum = min(skew)
+
+    for i in skew:
+        if i == minimum:
+            positions.append(count)
+        count += 1
+
+    return positions
+
+
+"""
+    Hamming Distance Problem:  Compute the Hamming distance between two strings.
+        Input: Two strings of equal length.
+         Output: The Hamming distance between these strings.
+"""
+
+
+def HammingDistance(p, q):
+    count = 0
+
+    for i in range(len(p)):
+        if p[i] != q[i]:
+            count += 1
+
+    return count
+
+
+"""
+    Approximate Pattern Matching Problem:  Find all approximate occurrences of a pattern in a string.
+        Input: Strings Pattern and Text along with an integer d.
+        Output: All starting positions where Pattern appears as a substring of Text with at most d mismatches.
+"""
+
+
+def ApproximatePatternMatching(Pattern, Text, d):
+    positions = []
+
+    for i in range(len(Text)-len(Pattern)+1):
+        if HammingDistance(Text[i:i+len(Pattern)], Pattern) <= d:
+            positions.append(i)
+
+    return positions
+
+
+def ApproximatePatternCount(Text, Pattern, d):
+    count = 0
+
+    for i in range(len(Text)-len(Pattern)+1):
+        if HammingDistance(Text[i:i+len(Pattern)], Pattern) <= d:
+            count += 1
+
+    return count
