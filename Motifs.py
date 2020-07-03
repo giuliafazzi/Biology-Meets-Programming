@@ -84,3 +84,71 @@ def Score(Motifs):
         score += t - value
 
     return score
+
+
+"""
+    Input:  String Text and profile matrix Profile
+    Output: Pr(Text, Profile)
+"""
+
+
+def Pr(Text, Profile):
+    prob = 1
+
+    for i, symbol in enumerate(Text):
+        prob *= Profile[symbol][i]
+
+    return prob
+
+
+"""
+    Profile-most Probable k-mer Problem: Find a Profile-most probable k-mer in a string.
+        Input: A string Text, an integer k, and a 4 x k matrix Profile.
+        Output: A Profile-most probable k-mer in Text.
+"""
+
+
+def ProfileMostProbableKmer(Text, k, Profile):
+    pr = {}
+    most_prob = []
+    n = len(Text)
+
+    for i in range(n-k+1):
+        k_mer = Text[i:i+k]
+        probability = Pr(k_mer, Profile)
+        pr[k_mer] = probability
+
+    m = max(pr.values())
+
+    for i, value in pr.items():
+        if value == m:
+            most_prob.append(i)
+
+    return most_prob[0]
+
+
+"""
+    Input:  A list of kmers Dna, and integers k and t (where t is the number of kmers in Dna)
+    Output: GreedyMotifSearch(Dna, k, t)
+"""
+
+
+def GreedyMotifSearch(Dna, k, t):
+    BestMotifs = []
+
+    for i in range(0, t):
+        BestMotifs.append(Dna[i][0:k])
+
+    n = len(Dna[0])
+
+    for i in range(n-k+1):
+        Motifs = []
+        Motifs.append(Dna[0][i:i+k])
+        for j in range(1, t):
+            P = Profile(Motifs[0:j])
+            Motifs.append(ProfileMostProbableKmer(Dna[j], k, P))
+
+        if Score(Motifs) < Score(BestMotifs):
+            BestMotifs = Motifs
+
+    return BestMotifs
