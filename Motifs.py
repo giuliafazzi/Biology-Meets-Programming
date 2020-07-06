@@ -1,3 +1,5 @@
+import random
+
 """
     Input:  A set of kmers Motifs
     Output: The count matrix of  Motifs, as a dictionary
@@ -189,7 +191,6 @@ def CountWithPseudocounts(Motifs):
 
 
 def ProfileWithPseudocounts(Motifs):
-    t = len(Motifs)
     k = len(Motifs[0])
     total = 0
     profile = {}
@@ -219,3 +220,137 @@ Profile = ProfileWithPseudocounts
 
 def GreedyMotifSearchWithPseudocounts(Dna, k, t):
     return GreedyMotifSearch(Dna, k, t)
+
+
+"""
+    Input:  A profile matrix Profile and a list of strings Dna
+    Output: Motifs(Profile, Dna)
+"""
+
+
+def Motifs(Profile, Dna):
+    t = len(Dna)
+    most_prob = []
+
+    for i in range(t):
+        most_prob.append(ProfileMostProbableKmer(
+            Dna[i], len(Profile['A']), Profile))
+
+    return most_prob
+
+
+"""
+    Input:  A list of strings Dna, and integers k and t
+    Output: RandomMotifs(Dna, k, t)
+"""
+
+
+def RandomMotifs(Dna, k, t):
+    s = len(Dna[0])
+    random_mer = []
+
+    for i in range(t):
+        r = random.randint(1, s - k)
+        random_mer.append(Dna[i][r:r+k])
+
+    return random_mer
+
+
+"""
+    Input:  Positive integers k and t, followed by a list of strings Dna
+    Output: RandomizedMotifSearch(Dna, k, t)
+"""
+
+
+def RandomizedMotifSearch(Dna, k, t):
+    M = RandomMotifs(Dna, k, t)
+    BestMotifs = M
+
+    while True:
+        Profile = ProfileWithPseudocounts(M)
+        M = Motifs(Profile, Dna)
+        if Score(M) < Score(BestMotifs):
+            BestMotifs = M
+        else:
+            return BestMotifs
+
+
+"""
+    Input: A dictionary Probabilities, where keys are k-mers and values are the probabilities of these k-mers (which do not necessarily sum up to 1)
+    Output: A normalized dictionary where the probability of each k-mer was divided by the sum of all k-mers' probabilities
+"""
+
+
+def Normalize(Probabilities):
+    total = 0
+    normalized = {}
+
+    for symbol in Probabilities:
+        total += Probabilities[symbol]
+
+    for symbol in Probabilities:
+        normalized[symbol] = Probabilities[symbol] / total
+
+    return normalized
+
+
+"""
+    Input:  A dictionary Probabilities whose keys are k-mers and whose values are the probabilities of these kmers
+    Output: A randomly chosen k-mer with respect to the values in Probabilities
+"""
+
+
+def WeightedDie(Probabilities):
+    kmer = ''
+    r = random.uniform(0, 1)
+    count = 0
+
+    for key in Probabilities:
+        count += Probabilities[key]
+
+        if r < count:
+            kmer = key
+            return kmer
+
+    return kmer
+
+
+"""
+    Input:  A string Text, a profile matrix Profile, and an integer k
+    Output: ProfileGeneratedString(Text, profile, k)
+"""
+
+
+def ProfileGeneratedString(Text, profile, k):
+    n = len(Text)
+    probabilities = {}
+
+    for i in range(0, n-k+1):
+        probabilities[Text[i:i+k]] = Pr(Text[i:i+k], profile)
+
+    probabilities = Normalize(probabilities)
+    return WeightedDie(probabilities)
+
+
+"""
+    Input:  Integers k, t, and N, followed by a collection of strings Dna
+    Output: GibbsSampler(Dna, k, t, N)
+"""
+
+
+def GibbsSampler(Dna, k, t, N):
+    BestMotifs = []
+    motifs = RandomMotifs(Dna, k, t)
+    BestMotifs = motifs
+
+    for j in range(N):
+        i = random.randint(0, t - 1)
+        del motifs[i]
+        prof = ProfileWithPseudocounts(motifs)
+        prof_string = ProfileGeneratedString(Dna[i], prof, k)
+        motifs.insert(i, prof_string)
+
+        if Score(motifs) < Score(BestMotifs):
+            BestMotifs = motifs
+
+    return BestMotifs
